@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   ///////////////////////////
 
   interface.finalize();
-  exit(1);
+  //exit(1);
 
 
 #ifdef USE_VTK
