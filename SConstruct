@@ -95,6 +95,6 @@ else:
                        ]
 
 # call SConscript to actually build the project after setting up the environment
-env.SConscript("./SConscript", exports='env', variant_dir='./build', duplicate=0)
-env.SConscript("./FluidSolver/SConscript", exports='env', variant_dir='./build/FluidSolver', duplicate=0)
+#env.SConscript("./SConscript", exports='env', variant_dir='./build', duplicate=0)
+env.SConscript("./FluidSolver/SConscript", exports='env', variant_dir='./FluidSolver/build', duplicate=0)
 env.SConscript("./Magrathea/SConscript", exports='env', variant_dir='./build/Magrathea', duplicate=0)

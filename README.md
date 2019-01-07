@@ -1,7 +1,10 @@
 ### In working directory:
     scons -c && scons --config=force
 
-Produces build directory
+Produces build directory. Open another terminal from the terminal in use, execute in the first terminal:
 
-### In build directory:
-    ./NumSim -geom ../geom/default.geom -param ../param/default.param
+    ./runSolid
+
+And in the second:
+
+    ./FluidSolver/build/NumSim -geom FluidSolver/geom/default.geom -param FluidSolver/param/default.param

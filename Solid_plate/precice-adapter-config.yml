@@ -1,0 +1,14 @@
+participant: Solid
+
+precice-config-file: precice-config.xml
+
+interfaces:
+- mesh: Solid-Mesh
+  patches:
+  - interface
+  write-data: Heat-Flux
+  read-data: Temperature
+
+# CHT: Conjugate Heat Transfer module
+# FSI: Fluid-Structure Interaction module
+CHTenabled: true
