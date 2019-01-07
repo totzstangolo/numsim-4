@@ -40,49 +40,49 @@ using namespace precice::constants;
 int main(int argc, char **argv) {
 
   // Create parameter and geometry instances with default values
-  int N = 10; // Number of mesh elements
-  std::string config("../config/precice-configs/precice_config_plate_explicit.xml");
-  std::string solverName("Fluid");
-  SolverInterface interface(solverName,0,1);
-  interface.configure(config);
-  // get domain dimension from precice
-  int dim = interface.getDimensions();
-  std::string mesh_name("Fluid-Mesh");
-  int meshID = interface.getMeshID(mesh_name);
-  int temperatureID = interface.getDataID("Temperature", meshID);
-  int heatfluxID = interface.getDataID("Heat-Flux", meshID);
-  int *vertexIDs = new int[(N + 1)];
-  double *grid = new double[dim * (N + 1)];
-
-  interface.setMeshVertices(meshID, N + 1, grid, vertexIDs);
-
-  std::cout << "Initialize preCICE..." << std::endl;
-  interface.initialize();
-
-  ///////////////////////////
-  interface.writeBlockScalarData(...); // write initial Temperature
-  interface.initializeData(); // synchronize with OpenFOAM
-  interface.readBlockScalarData(...); // read heatfluxCoupled
-
-  // start the simulation loop
-  while (interface.isCouplingOngoing()) { // time loop
-    // calculate your solvers time step = solver_dt
-    22
-    // your dt should be minimum(preccie_dt, solver_dt)
-    // coupling
-    interface.writeBlockScalarData(...); // write new temperature to preCICE buffers
-    precice_dt = interface_advance(dt); // advance coupling
-    interface.readBlockScalarData(...); // read new heatflux from preCICE buffers
-    // update fluid domains heat flux boundary condition!
-    //output data for visualization and update iteration values
-  }
-
-
-  ///////////////////////////
-
-  interface.finalize();
-
-  exit(1);
+  // int N = 10; // Number of mesh elements
+  // std::string config("../config/precice-configs/precice_config_plate_explicit.xml");
+  // std::string solverName("Fluid");
+  // SolverInterface interface(solverName,0,1);
+  // interface.configure(config);
+  // // get domain dimension from precice
+  // int dim = interface.getDimensions();
+  // std::string mesh_name("Fluid-Mesh");
+  // int meshID = interface.getMeshID(mesh_name);
+  // int temperatureID = interface.getDataID("Temperature", meshID);
+  // int heatfluxID = interface.getDataID("Heat-Flux", meshID);
+  // int *vertexIDs = new int[(N + 1)];
+  // double *grid = new double[dim * (N + 1)];
+  //
+  // interface.setMeshVertices(meshID, N + 1, grid, vertexIDs);
+  //
+  // std::cout << "Initialize preCICE..." << std::endl;
+  // interface.initialize();
+  //
+  // ///////////////////////////
+  // interface.writeBlockScalarData(...); // write initial Temperature
+  // interface.initializeData(); // synchronize with OpenFOAM
+  // interface.readBlockScalarData(...); // read heatfluxCoupled
+  //
+  // // start the simulation loop
+  // while (interface.isCouplingOngoing()) { // time loop
+  //   // calculate your solvers time step = solver_dt
+  //   22
+  //   // your dt should be minimum(preccie_dt, solver_dt)
+  //   // coupling
+  //   interface.writeBlockScalarData(...); // write new temperature to preCICE buffers
+  //   precice_dt = interface_advance(dt); // advance coupling
+  //   interface.readBlockScalarData(...); // read new heatflux from preCICE buffers
+  //   // update fluid domains heat flux boundary condition!
+  //   //output data for visualization and update iteration values
+  // }
+  //
+  //
+  // ///////////////////////////
+  //
+  // interface.finalize();
+  //
+  // exit(1);
   Communicator comm(&argc, &argv);
   Parameter param;
   Geometry geom(&comm);
