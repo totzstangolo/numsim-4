@@ -1,7 +1,7 @@
 ### In working directory:
     scons -c && scons --config=force
 
-Produces build directory. Open another terminal from the terminal in use, execute in the first terminal:
+Stay in working directory. Open another terminal from the terminal in use, execute in the first terminal:
 
     ./runSolid
 
