@@ -142,61 +142,62 @@ VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
   // Run the time steps until the end is reached
 
         // start the simulation loop
-        while (interface.isCouplingOngoing()) { // time loop
-          // calculate your solvers time step = solver_dt
-          // your dt should be minimum(preccie_dt, solver_dt)
-          // coupling
-          while (comp.GetTime() < param.Tend()) {
+while (interface.isCouplingOngoing()) { // time loop
+    // calculate your solvers time step = solver_dt
+    // your dt should be minimum(preccie_dt, solver_dt)
+    // coupling
+    while (comp.GetTime() < param.Tend()) {
         #ifdef USE_DEBUG_VISU
-            // Render and check if window is closed
-            switch (visu.Render(visugrid)) {
-            case -1:
-              return -1;
-            case 0:
-              visugrid = comp.GetVelocity();
-              break;
-            case 1:
-              visugrid = comp.GetU();
-              break;
-            case 2:
-              visugrid = comp.GetV();
-              break;
-            case 3:
-              visugrid = comp.GetP();
-              break;
-            case 4:
-              visugrid = comp.GetT();
-            default:
-              break;
-            };
+        // Render and check if window is closed
+        switch (visu.Render(visugrid)) {
+        case -1:
+          return -1;
+        case 0:
+          visugrid = comp.GetVelocity();
+          break;
+        case 1:
+          visugrid = comp.GetU();
+          break;
+        case 2:
+          visugrid = comp.GetV();
+          break;
+        case 3:
+          visugrid = comp.GetP();
+          break;
+        case 4:
+          visugrid = comp.GetT();
+        default:
+          break;
+        };
         #endif // USE_DEBUG_VISU
 
         #ifdef USE_VTK
-            // Create VTK Files in the folder VTK
-            vtk.Init("VTK/field");
-            vtk.AddRank();
-            vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
-            vtk.SwitchToPointData();
-            vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
-            vtk.AddPointScalar("Pressure", comp.GetP());
-            vtk.AddPointScalar("Temperature", comp.GetT());
-            vtk.Finish();
+        // Create VTK Files in the folder VTK
+        vtk.Init("VTK/field");
+        vtk.AddRank();
+        vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
+        vtk.SwitchToPointData();
+        vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
+        vtk.AddPointScalar("Pressure", comp.GetP());
+        vtk.AddPointScalar("Temperature", comp.GetT());
+        vtk.Finish();
         #endif
 
-            // Run a few steps
-            // for (uint32_t i = 0; i < 9; ++i) {
-          dt = comp.TimeStep(false,dt);
-          //dt = std::min(precice_dt,dt);
-          interface.writeBlockScalarData(temperatureID,N+1,vertexIDs,temperature); // write new temperature to preCICE buffers
-          precice_dt = interface.advance(dt); // advance coupling
-          // interface.readBlockScalarData(heatfluxID,N+1,vertexIDs,heatflux); // read new heatflux from preCICE buffers
-          // update fluid domains heat flux boundary condition!
-          //output data for visualization and update iteration values
-          // std::cout << "Im here" << std::endl;
-      }
-      interface.finalize();
+        // Run a few steps
+        // for (uint32_t i = 0; i < 9; ++i) {
+        dt = comp.TimeStep(false,dt);
+        //dt = std::min(precice_dt,dt);
+        interface.writeBlockScalarData(temperatureID,N+1,vertexIDs,temperature); // write new temperature to preCICE buffers
+        precice_dt = interface.advance(dt); // advance coupling
+        interface.readBlockScalarData(heatfluxID,N+1,vertexIDs,heatflux); // read new heatflux from preCICE buffers
+        // update fluid domains heat flux boundary condition!
+        //output data for visualization and update iteration values
+        // std::cout << "Im here" << std::endl;
+        bool printOnlyOnMaster = !comm.getRank();
+        comp.TimeStep(printOnlyOnMaster,dt);
+    }
+    interface.finalize();
     // suppress output on other nodes than rank 0
-
   }
   return 0;
 }
