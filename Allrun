@@ -14,8 +14,8 @@ Participant1="Fluid"
     echo "Preparing the ${Participant1} participant..."
 
     # Run and get the process id
-    echo "Starting the ${Participant1} participant..." 
-    ./FluidSolver/build/NumSim -geom FluidSolver/geom/default.geom -param FluidSolver/param/default.param & 
+    echo "Starting the ${Participant1} participant..."
+    ./FluidSolver/build/NumSim -geom FluidSolver/geom/default.geom -param FluidSolver/param/default.param > ${Participant1}.log 2>&1 &
     PIDParticipant1=$!
 
 # Participant 2: Solid
