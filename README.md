@@ -8,3 +8,6 @@ Stay in working directory. Here, execute:
 To clean all produced files:
 
     ./Allclean
+
+### To do:
+1) Define a function which sets the observables on the fluid boundary.

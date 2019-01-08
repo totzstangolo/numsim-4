@@ -78,12 +78,12 @@ Compute::~Compute(){
 	delete _solver;
 }
 
-void Compute::TimeStep(bool printInfo){
+double Compute::TimeStep(bool printInfo, double dt){
 
 
 	// Compute like in script page 23
 	//compute dt
-	real_t dt = _param->Dt();
+	// real_t dt = _param->Dt();
     if(dt == 0){
 		dt = abs(std::min<real_t>(_geom->Mesh()[0]/_u->AbsMax(),_geom->Mesh()[1]/_v->AbsMax()));
 		dt = std::min<real_t>(dt,_dtlimit);
@@ -95,20 +95,6 @@ void Compute::TimeStep(bool printInfo){
 	}
 
 	_max_dt = std::min<real_t>(_max_dt, dt);
-
-	/*BoundaryIterator it(_geom);
-	it.SetBoundary(0);
-	for (it.First();it.Valid();it.Next()){
-		_T->Cell(it) = 1.0;
-	}*/
-	// Iterator it2(_geom);
-	// for (it2.First();it2.Valid();it2.Next()){
-	// 	std::cout << "Temperature in cell " << it2.Value() << ": "
-	// 	<< _T->Cell(it2) << std::endl;
-	// }
-	// exit(0);
-	// compute FG and update bound.
-
 
 	// compute temperature and update bound
 	TempEqu(dt);
@@ -148,7 +134,7 @@ void Compute::TimeStep(bool printInfo){
 	if(printInfo)
 		// printf("time: %f \n itercount: %d \n max_dt: %f \n", _t, _iter_count, _max_dt);
 		printf("time: %f\n", _t);
-
+	return dt;
 }
 
   /// Returns the simulated time in total
