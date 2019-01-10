@@ -166,6 +166,8 @@ Geometry::Geometry() : _comm(NULL) {
   _pressure = 0.0;
   _velocity[0] = 1.0;
   _velocity[1] = 0.0;
+  // _origin[0] = -1.0;
+  // _origin[1] = -1.0;
 
   // create boundary halo
   _size[0] += 2;
@@ -188,6 +190,8 @@ Geometry::Geometry(const Communicator *comm) : _comm(comm) {
   _pressure = 0.0;
   _velocity[0] = 1.0;
   _velocity[1] = 0.0;
+  _origin[0] = -1.0;
+  _origin[1] = -1.0;
 
   _bsize[0] = _size[0] / _comm->ThreadDim()[0] + 2;
   _bsize[1] = _size[1] / _comm->ThreadDim()[1] + 2;
@@ -282,8 +286,13 @@ void Geometry::Load(const char *file) {
             case 'C':
               _cell[x + y * _size[0]].type = typeCold;
               break;
-            case 'W':
-              _cell[x + y * _size[0]].type = typeInsul;
+            case 'K':
+              _cell[x + y * _size[0]].type = typeCoup;
+              if (_origin[0]<0){
+                  _origin[0] = x;
+                }
+                _origin[1] = y;
+                _coup = x-_origin[0]+1;
               break;
             case '-':
               _cell[x + y * _size[0]].type = typeSlipH;
@@ -453,7 +462,7 @@ void Geometry::Update_U(Grid *u) const {
       switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
       case typeHot:
       case typeCold:
-      case typeInsul:
+      case typeCoup:
       case typeSlipV:
       case typeSolid:
         UpdateCellDirichlet_U(u, 0.0, it);
@@ -481,28 +490,54 @@ void Geometry::Update_U(Grid *u) const {
   } else {
     BoundaryIterator it(this);
     if (_comm && _comm->isBottom()) {
-      it.SetBoundary(0);
+      it.SetBoundary(0,false);
       for (it.First(); it.Valid(); it.Next())
         u->Cell(it) = -u->Cell(it.Top());
     }
     if (_comm && _comm->isLeft()) {
-      it.SetBoundary(1);
+      it.SetBoundary(1,false);
       for (it.First(); it.Valid(); it.Next())
         u->Cell(it) = 0.0;
     }
     if (_comm && _comm->isRight()) {
-      it.SetBoundary(3);
+      it.SetBoundary(3,false);
       for (it.First(); it.Valid(); it.Next()) {
         u->Cell(it) = 0.0;
         u->Cell(it.Left()) = 0.0;
       }
     }
     if (_comm && _comm->isTop()) {
-      it.SetBoundary(2);
+      it.SetBoundary(2,false);
       for (it.First(); it.Valid(); it.Next())
         u->Cell(it) = 2.0 * _velocity[0] - u->Cell(it.Down());
     }
   }
+}
+
+double* Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *heatflux) const{
+    BoundaryIterator it(this);
+    it.SetBoundary(0,true);
+    int count = 0;
+    double* temperature;
+    for(it.First(); it.Valid(); it.Next()){
+        T->Cell(it) = T->Cell(it.Top()) + Mesh()[0]*heatflux[count];
+        count++;
+    }
+    // int N = count;
+    // temperature = new double[count];
+    // // for(count=0;count<N;count++){
+    // //     temperature[count] = 0.0; // init
+    // // }
+    // // count = 0;
+    // for(it.First(); it.Valid(); it.Next()){
+    //     temperature[count] = T->Cell(it);
+    //     count++;
+    // }
+    // for(count=0;count<N;count++){
+    //     std::cout << temperature[count] << " ";
+    // }
+    // std::cout << std::endl;
+    // return temperature;
 }
 
 //------------------------------------------------------------------------------
@@ -513,7 +548,7 @@ void Geometry::Update_V(Grid *v) const {
       switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
       case typeHot:
       case typeCold:
-      case typeInsul:
+      case typeCoup:
       case typeSlipH:
       case typeSolid:
         UpdateCellDirichlet_V(v, 0, it);
@@ -540,24 +575,24 @@ void Geometry::Update_V(Grid *v) const {
   } else {
     BoundaryIterator it(this);
     if (_comm && _comm->isBottom()) {
-      it.SetBoundary(0);
+      it.SetBoundary(0,false);
       for (it.First(); it.Valid(); it.Next())
         v->Cell(it) = 0.0;
     }
     if (_comm && _comm->isTop()) {
-      it.SetBoundary(2);
+      it.SetBoundary(2,false);
       for (it.First(); it.Valid(); it.Next()) {
         v->Cell(it) = 0.0;
         v->Cell(it.Down()) = 0.0;
       }
     }
     if (_comm && _comm->isLeft()) {
-      it.SetBoundary(1);
+      it.SetBoundary(1,false);
       for (it.First(); it.Valid(); it.Next())
         v->Cell(it) = -v->Cell(it.Right());
     }
     if (_comm && _comm->isRight()) {
-      it.SetBoundary(3);
+      it.SetBoundary(3,false);
       for (it.First(); it.Valid(); it.Next())
         v->Cell(it) = -v->Cell(it.Left());
     }
@@ -571,7 +606,7 @@ void Geometry::Update_P(Grid *p) const {
       switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
       case typeHot:
       case typeCold:
-      case typeInsul:
+      case typeCoup:
       case typeIn:
       case typeInH:
       case typeInV:
@@ -593,22 +628,22 @@ void Geometry::Update_P(Grid *p) const {
 	  printf("Hi \n");
     BoundaryIterator it(this);
     if (_comm && _comm->isBottom()) {
-      it.SetBoundary(0);
+      it.SetBoundary(0,false);
       for (it.First(); it.Valid(); it.Next())
         p->Cell(it) = p->Cell(it.Top());
     }
     if (_comm && _comm->isTop()) {
-      it.SetBoundary(2);
+      it.SetBoundary(2,false);
       for (it.First(); it.Valid(); it.Next())
         p->Cell(it) = p->Cell(it.Down());
     }
     if (_comm && _comm->isLeft()) {
-      it.SetBoundary(1);
+      it.SetBoundary(1,false);
       for (it.First(); it.Valid(); it.Next())
         p->Cell(it) = p->Cell(it.Right());
     }
     if (_comm && _comm->isRight()) {
-      it.SetBoundary(3);
+      it.SetBoundary(3,false);
       for (it.First(); it.Valid(); it.Next())
         p->Cell(it) = p->Cell(it.Left());
     }
@@ -617,12 +652,11 @@ void Geometry::Update_P(Grid *p) const {
 
 //------------------------------------------------------------------------------
 
-void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
+void Geometry::Update_T(Grid *t, real_t hot, real_t cold, bool coup) const {
   if (_cell) {
 /*    Iterator it(this);
     for (it.First(); it.Valid(); it.Next()) {
       switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
-      case typeInsul:
       case typeIn:
       case typeInH:
       case typeInV:
@@ -645,7 +679,7 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
   } else {*/
     BoundaryIterator it(this);
     if (_comm && _comm->isBottom()) {
-      it.SetBoundary(0);
+      it.SetBoundary(0,coup);
       for (it.First(); it.Valid(); it.Next())
           switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
           case typeHot:
@@ -660,7 +694,7 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
           }
     }
     if (_comm && _comm->isTop()) {
-      it.SetBoundary(2);
+      it.SetBoundary(2,coup);
       for (it.First(); it.Valid(); it.Next())
           switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
           case typeHot:
@@ -675,7 +709,7 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
           }
     }
     if (_comm && _comm->isLeft()) {
-      it.SetBoundary(1);
+      it.SetBoundary(1,coup);
       for (it.First(); it.Valid(); it.Next())
           switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
           case typeHot:
@@ -690,7 +724,7 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
           }
     }
     if (_comm && _comm->isRight()) {
-      it.SetBoundary(3);
+      it.SetBoundary(3,coup);
       for (it.First(); it.Valid(); it.Next())
           switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1] * _size[0]].type) {
           case typeHot:
@@ -706,5 +740,8 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold) const {
     }
   }
 }
+
+const multi_real_t &Geometry::Origin() const{ return _origin;}
+const real_t &Geometry::Coup() const{ return _coup;}
 
 //------------------------------------------------------------------------------

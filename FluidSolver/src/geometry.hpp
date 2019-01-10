@@ -29,7 +29,7 @@ typedef enum {
   typeSolid, // Simple wall, no slip
   typeHot,
   typeCold,
-  typeInsul,
+  typeCoup,
   typeIn,    // Simple inflow (forced Velocity)
   typeOut,   // Outflow
   typeSlipH, // Horizontal slip boundary
@@ -106,6 +106,10 @@ public:
   const multi_real_t &TotalLength() const;
   /// Returns the meshwidth
   const multi_real_t &Mesh() const;
+  /// Get origin
+  const multi_real_t &Origin() const;
+  /// Get coupling width (assume edge lengths of same size)
+  const real_t &Coup() const;
 
 
   /// Returns the celltype of cell
@@ -119,7 +123,10 @@ public:
   /// Updates the pressure field p
   void Update_P(Grid *p) const;
   /// Updates the pressure field t
-  void Update_T(Grid *t, real_t hot, real_t cold) const;
+  void Update_T(Grid *t, real_t hot, real_t cold, bool coup) const;
+  /// Updates coupling interface(s)
+  double* UpdateCoupling_T(Grid *T, double *vertices, double *heatflux) const;
+
 
 
 private:
@@ -133,6 +140,8 @@ private:
   multi_real_t _blength;
   index_t _boffset;
   multi_real_t _h;
+  multi_real_t _origin;
+  real_t _coup;
 
   multi_real_t _velocity;
   real_t _pressure;

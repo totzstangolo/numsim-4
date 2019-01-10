@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   parser.exec(argc, argv);
   // Create the fluid solver
   Compute comp(&geom, &param);
-
+  std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
   // Create parameter and geometry instances with default values
   int N = 64; // Number of mesh elements
   std::string config("./precice-config.xml");
@@ -69,40 +69,48 @@ int main(int argc, char **argv) {
   int meshID = interface.getMeshID(mesh_name);
   int temperatureID = interface.getDataID("Temperature", meshID);
   int heatfluxID = interface.getDataID("Heat-Flux", meshID);
-  int *vertexIDs = new int[(N + 1)];
-  double *grid = new double[dim * (N + 1)];
+  int *vertexIDs = new int[N];
+  double *vertices = new double[dim * N];
   double *temperature, *heatflux;
-  temperature = new double[N + 1];
-  heatflux = new double[N + 1];
-
-  for (int i = 0; i <= N; i++) {
+  temperature = new double[N];
+  heatflux = new double[N];
+  // int countThat=0;
+  for (int i = 0; i < N; i++) {
         temperature[i] = 0.0;
         heatflux[i]    = 0.0;
         for (int j = 0; j < dim; j++){
-            if(j>0) {
-                grid[i * dim + j] = 0;
+            if(j==0) {
+                vertices[i * dim + j] = (i * (1 - j) + geom.Origin()[0])*geom.Mesh()[0];
             }else{
-                grid[i * dim + j] = i * (1 - j) + 26;
+                if(j==1){
+                    vertices[i * dim + j] = 0.25*geom.Mesh()[1];
+                }else{
+                    vertices[i * dim + j] = 0;
+                }
+
             }
-            std::cout << grid[i * dim + j] << " ";
+            // std::cout << vertices[i * dim + j] << " ";
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
+        // countThat++;
   }
-  // exit(1);
+  std::cout << "HOW LARGE COUPLING WIDTH: " << geom.Coup() << std::endl;
+
   double precice_dt;
-  interface.setMeshVertices(meshID, N + 1, grid, vertexIDs);
+  interface.setMeshVertices(meshID, N, vertices, vertexIDs);
 
   std::cout << "Initialize preCICE..." << std::endl;
-  double dt = interface.initialize();
+  double dt = 0.00;
+  interface.initialize();
   //std::cout << "Up to here" << std::endl;
   ///////////////////////////
   if (interface.isActionRequired(actionWriteInitialData())) {
-      interface.writeBlockScalarData(temperatureID,N+1,vertexIDs,temperature); // write initial Temperature
+      interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write initial Temperature
       interface.fulfilledAction(actionWriteInitialData());
   }
   interface.initializeData(); // synchronize with OpenFOAM
   if (interface.isReadDataAvailable()) {
-      interface.readBlockScalarData(heatfluxID,N+1,vertexIDs,heatflux); // read heatfluxCoupled
+      interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read heatfluxCoupled
   }
 
 
@@ -185,16 +193,19 @@ while (interface.isCouplingOngoing()) { // time loop
 
         // Run a few steps
         // for (uint32_t i = 0; i < 9; ++i) {
-        dt = comp.TimeStep(false,dt);
-        //dt = std::min(precice_dt,dt);
-        interface.writeBlockScalarData(temperatureID,N+1,vertexIDs,temperature); // write new temperature to preCICE buffers
+        dt = std::min(precice_dt,dt);
+        interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
         precice_dt = interface.advance(dt); // advance coupling
-        interface.readBlockScalarData(heatfluxID,N+1,vertexIDs,heatflux); // read new heatflux from preCICE buffers
+        interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
+        comp.set_coupl_temp(vertices,heatflux);
         // update fluid domains heat flux boundary condition!
         //output data for visualization and update iteration values
-        // std::cout << "Im here" << std::endl;
-        bool printOnlyOnMaster = !comm.getRank();
-        comp.TimeStep(printOnlyOnMaster,dt);
+        std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
+        std::cout << comp.GetTime()  <<std::endl;
+        dt = comp.TimeStep(false,dt);
+        // exit(1);
+        // bool printOnlyOnMaster = !comm.getRank();
+        // comp.TimeStep(printOnlyOnMaster,dt);
     }
     interface.finalize();
     // suppress output on other nodes than rank 0

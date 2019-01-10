@@ -15,7 +15,7 @@ Participant1="Fluid"
 
     # Run and get the process id
     echo "Starting the ${Participant1} participant..."
-    ./FluidSolver/build/NumSim -geom FluidSolver/geom/default.geom -param FluidSolver/param/default.param > ${Participant1}.log 2>&1 &
+    ./FluidSolver/build/NumSim -geom FluidSolver/geom/default.geom -param FluidSolver/param/default.param > ${Participant1}.log #2>&1 &
     PIDParticipant1=$!
 
 # Participant 2: Solid
@@ -29,7 +29,7 @@ Solver2="laplacianFoam"
 
     # Run and get the process id
     echo "Starting the ${Participant2} participant..."
-    ${Solver2} -case ${Participant2} > ${Participant2}.log 2>&1 &
+    ${Solver2} -case ${Participant2} > ${Participant2}.log #2>&1 &
     PIDParticipant2=$!
 
 # Wait for all the participants to finish

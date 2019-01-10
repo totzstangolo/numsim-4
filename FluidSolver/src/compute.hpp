@@ -52,6 +52,8 @@ public:
   const Grid *GetVorticity();
   /// Computes and returns the stream line values
   const Grid *GetStream();
+  ///
+  double* set_coupl_temp(double *vertices, double *heatflux) const;
 
 private:
   // testing

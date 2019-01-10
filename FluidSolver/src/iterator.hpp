@@ -76,7 +76,7 @@ public:
 	BoundaryIterator (const Geometry* geom);
 
 	/// Sets the boundary to iterate
-	void SetBoundary (const index_t& boundary);
+	void SetBoundary (const index_t& boundary, bool coup);
 
 	/// Sets the iterator to the first element
 	void First ();
@@ -84,6 +84,7 @@ public:
 	void Next  ();
 private:
     index_t		_boundary;
+	bool		_coup;
 };
 //------------------------------------------------------------------------------
 #endif // __ITERATOR_HPP

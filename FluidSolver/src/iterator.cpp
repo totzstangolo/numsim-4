@@ -105,25 +105,44 @@ BoundaryIterator::BoundaryIterator (const Geometry* geom) : Iterator(geom) {
 	_boundary = 0;
 }
 //------------------------------------------------------------------------------
-void BoundaryIterator::SetBoundary (const index_t& boundary) {
+// If coup is true, it is an iterator specifically for coupling boundaries,
+// which knows where the boundaries are located
+void BoundaryIterator::SetBoundary (const index_t& boundary, bool coup) {
 	_boundary = boundary%4;
 	_valid = false;
+	_coup = coup;
 }
 //------------------------------------------------------------------------------
 void BoundaryIterator::First () {
 	_valid = true;
 	switch (_boundary) {
 	case 0:
-		_value = 0;
+		if(_coup){
+			_value = _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0];
+		}else{
+			_value = 0;
+		}
 		break;
 	case 1:
-		_value = 0;
+		if(_coup){
+			_value = _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0];
+		}else{
+			_value = 0;
+		}
 		break;
 	case 2:
-		_value = _geom->Size()[0]*(_geom->Size()[1] - 1);
+		if(_coup){
+			_value = _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0];
+		}else{
+			_value = _geom->Size()[0]*(_geom->Size()[1] - 1);
+		}
 		break;
 	case 3:
-		_value = _geom->Size()[0] - 1;
+		if(_coup){
+			_value = _geom->Origin()[0]+_geom->Coup();
+		}else{
+			_value = _geom->Size()[0] - 1;
+		}
 		break;
 	default:
 		_boundary = 0;
@@ -131,25 +150,64 @@ void BoundaryIterator::First () {
 		break;
 	};
 }
+//
+// void BoundaryIterator::First () {
+// 	_valid = true;
+// 	switch (_boundary) {
+// 	case 0:
+// 		_value = 0;
+// 		break;
+// 	case 1:
+// 		_value = 0;
+// 		break;
+// 	case 2:
+// 		_value = _geom->Size()[0]*(_geom->Size()[1] - 1);
+// 		break;
+// 	case 3:
+// 		_value = _geom->Size()[0] - 1;
+// 		break;
+// 	default:
+// 		_boundary = 0;
+// 		_value = 0;
+// 		break;
+// 	};
+// }
+
 //------------------------------------------------------------------------------
 void BoundaryIterator::Next () {
 	if (!_valid) return;
 	switch (_boundary) {
 	case 0:
 		++_value;
-		if (_value >= _geom->Size()[0]) _valid = false;
+		if(_coup){
+			if (_value >= _geom->Origin()[0]+_geom->Coup()) _valid = false;
+		}else{
+			if (_value >= _geom->Size()[0]) _valid = false;
+		}
 		break;
 	case 1:
 		_value += _geom->Size()[0];
-		if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		if(_coup){
+			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0]) _valid = false;
+		}else{
+			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		}
 		break;
 	case 2:
 		++_value;
-		if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		if(_coup){
+			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0] + _geom->Coup()) _valid = false;
+		}else{
+			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		}
 		break;
 	case 3:
 		_value += _geom->Size()[0];
-		if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		if(_coup){
+			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0] + _geom->Coup()) _valid = false;
+		}else{
+			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
+		}
 		break;
 	default:
 		++_value;

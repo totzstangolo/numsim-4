@@ -78,6 +78,11 @@ Compute::~Compute(){
 	delete _solver;
 }
 
+double* Compute::set_coupl_temp(double *vertices, double *heatflux) const{
+	double* temperature = _geom->UpdateCoupling_T(_T,vertices,heatflux);
+	return temperature;
+}
+
 double Compute::TimeStep(bool printInfo, double dt){
 
 
@@ -98,7 +103,7 @@ double Compute::TimeStep(bool printInfo, double dt){
 
 	// compute temperature and update bound
 	TempEqu(dt);
-	_geom->Update_T(_T, _param->T_h(), _param->T_c());
+	_geom->Update_T(_T, _param->T_h(), _param->T_c(), false);
 
 	// compute FG and update bound.
 	MomentumEqu(dt);
