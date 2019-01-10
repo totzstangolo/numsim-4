@@ -53,7 +53,7 @@ public:
   /// Computes and returns the stream line values
   const Grid *GetStream();
   ///
-  double* set_coupl_temp(double *vertices, double *heatflux) const;
+  void set_coupl_temp(double *vertices, double* temperature, double *heatflux) const;
 
 private:
   // testing

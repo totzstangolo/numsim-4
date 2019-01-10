@@ -197,7 +197,7 @@ while (interface.isCouplingOngoing()) { // time loop
         interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
         precice_dt = interface.advance(dt); // advance coupling
         interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
-        comp.set_coupl_temp(vertices,heatflux);
+        comp.set_coupl_temp(vertices,temperature,heatflux);
         // update fluid domains heat flux boundary condition!
         //output data for visualization and update iteration values
         std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;

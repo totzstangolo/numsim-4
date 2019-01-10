@@ -514,11 +514,10 @@ void Geometry::Update_U(Grid *u) const {
   }
 }
 
-double* Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *heatflux) const{
+void Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *temperature, double *heatflux) const{
     BoundaryIterator it(this);
     it.SetBoundary(0,true);
     int count = 0;
-    double* temperature;
     for(it.First(); it.Valid(); it.Next()){
         T->Cell(it) = T->Cell(it.Top()) + Mesh()[0]*heatflux[count];
         count++;
@@ -529,10 +528,10 @@ double* Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *heatflux) 
     // //     temperature[count] = 0.0; // init
     // // }
     // // count = 0;
-    // for(it.First(); it.Valid(); it.Next()){
-    //     temperature[count] = T->Cell(it);
-    //     count++;
-    // }
+    for(it.First(); it.Valid(); it.Next()){
+        temperature[count] = T->Cell(it);
+        count++;
+    }
     // for(count=0;count<N;count++){
     //     std::cout << temperature[count] << " ";
     // }

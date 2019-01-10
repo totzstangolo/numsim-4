@@ -78,9 +78,8 @@ Compute::~Compute(){
 	delete _solver;
 }
 
-double* Compute::set_coupl_temp(double *vertices, double *heatflux) const{
-	double* temperature = _geom->UpdateCoupling_T(_T,vertices,heatflux);
-	return temperature;
+void Compute::set_coupl_temp(double *vertices, double *temperature, double *heatflux) const{
+	_geom->UpdateCoupling_T(_T,vertices,temperature,heatflux);
 }
 
 double Compute::TimeStep(bool printInfo, double dt){
