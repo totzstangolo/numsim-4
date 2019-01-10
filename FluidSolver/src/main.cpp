@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   Compute comp(&geom, &param);
   std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
   // Create parameter and geometry instances with default values
-  int N = 64; // Number of mesh elements
+  int N = geom.Coup(); // Number of mesh elements
   std::string config("./precice-config.xml");
   std::string solverName("Fluid");
   SolverInterface interface(solverName,0,1);
