@@ -11,6 +11,9 @@
 #include <cmath>
 #include <ctime>
 #include <algorithm>
+
+using namespace precice;
+using namespace precice::constants;
 using namespace std;
 
 Compute::Compute(const Geometry *geom, const Parameter *param){
@@ -97,23 +100,31 @@ double Compute::getTimeStep(double dt){
 
 }
 
-double Compute::TimeStep(bool printInfo, double dt){
-
-
+double Compute::TimeStep(bool printInfo, SolverInterface *interface,int temperatureID, int heatfluxID, int N, int *vertexIDs,
+double *vertices,double *temperature,double *heatflux,double &precice_dt){
+	(*interface).readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
+	set_coupl_temp(heatflux,N);
 	// Compute like in script page 23
 	//compute dt
-	// real_t dt = _param->Dt();
-    if(dt == 0){
-		dt = abs(std::min<real_t>(_geom->Mesh()[0]/_u->AbsMax(),_geom->Mesh()[1]/_v->AbsMax()));
-		dt = std::min<real_t>(dt,_dtlimit);
-		dt *= _param->Tau();
-	}
+	real_t dt = _param->Dt();
+	dt = abs(std::min<real_t>(_geom->Mesh()[0]/_u->AbsMax(),_geom->Mesh()[1]/_v->AbsMax()));
+	dt = std::min<real_t>(dt,_dtlimit);
+	dt *= _param->Tau();
 
 	if(printInfo) {
 		printf("dt: %f \n", dt);
 	}
 
 	_max_dt = std::min<real_t>(_max_dt, dt);
+
+	/*
+	///////////////////////////
+	**/
+
+	dt = std::min(precice_dt,_max_dt);
+	/**
+	///////////////////////////
+	*/
 
 	// compute temperature and update bound
 	TempEqu(dt);
@@ -153,6 +164,10 @@ double Compute::TimeStep(bool printInfo, double dt){
 	if(printInfo)
 		// printf("time: %f \n itercount: %d \n max_dt: %f \n", _t, _iter_count, _max_dt);
 		printf("time: %f\n", _t);
+
+	GetCoupling_T(temperature,N);
+	(*interface).writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
+    precice_dt = (*interface).advance(dt); // advance coupling
 	return dt;
 }
 

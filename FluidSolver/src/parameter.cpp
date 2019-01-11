@@ -34,6 +34,7 @@ while (!feof(handle)) {
     else if (strcmp(name,"pr") == 0) _pr = inval;
 	else if (strcmp(name,"T_h") == 0) _T_h = inval;
 	else if (strcmp(name,"T_c") == 0) _T_c = inval;
+    else if (strcmp(name,"kappa") == 0) _ka = inval;
 	else printf("Unknown parameter %s\n",name);
 }
 fclose(handle);
@@ -43,6 +44,10 @@ fclose(handle);
 
 const real_t &Parameter::Re()const{
 return _re;
+}
+
+const real_t &Parameter::Ka()const{
+return _ka;
 }
 
 const real_t &Parameter::Omega()const{

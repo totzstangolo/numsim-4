@@ -16,6 +16,7 @@
  */
 
 #include "typedef.hpp"
+#include "precice/SolverInterface.hpp"
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
 #define __COMPUTE_HPP
@@ -30,7 +31,8 @@ public:
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  double TimeStep(bool printInfo, double dt);
+  double TimeStep(bool printInfo, precice::SolverInterface *interface,int temperatureID, int heatfluxID, int N, int *vertexIDs,
+  double *vertices,double *temperature,double *heatflux,double &precice_dt);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;

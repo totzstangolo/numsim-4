@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
   parser.exec(argc, argv);
   // Create the fluid solver
   Compute comp(&geom, &param);
-  // std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
   // Create parameter and geometry instances with default values
   int N = geom.Coup(); // Number of mesh elements
   std::string config("./precice-config.xml");
@@ -95,12 +94,10 @@ int main(int argc, char **argv) {
         // countThat++;
   }
 
-  double precice_dt;
   interface.setMeshVertices(meshID, N, vertices, vertexIDs);
 
   std::cout << "Initialize preCICE..." << std::endl;
-  double dt = 0.00;
-  interface.initialize();
+  double precice_dt = interface.initialize();
 
   if (interface.isActionRequired(actionWriteInitialData())) {
       interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write initial Temperature
@@ -110,8 +107,6 @@ int main(int argc, char **argv) {
   if (interface.isReadDataAvailable()) {
       interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read heatfluxCoupled
   }
-
-
 
 #ifdef USE_VTK
   if (comm.getRank() == 0) {
@@ -145,66 +140,47 @@ VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
   visugrid = comp.GetVelocity();
 #endif // USE_DEBUG_VISU
 
-  // Run the time steps until the end is reached
+while (comp.GetTime() < param.Tend()) {
+    #ifdef USE_DEBUG_VISU
+    // Render and check if window is closed
+    switch (visu.Render(visugrid)) {
+    case -1:
+      return -1;
+    case 0:
+      visugrid = comp.GetVelocity();
+      break;
+    case 1:
+      visugrid = comp.GetU();
+      break;
+    case 2:
+      visugrid = comp.GetV();
+      break;
+    case 3:
+      visugrid = comp.GetP();
+      break;
+    case 4:
+      visugrid = comp.GetT();
+    default:
+      break;
+    };
+    #endif // USE_DEBUG_VISU
 
-        // start the simulation loop
-// while (interface.isCouplingOngoing()) { // time loop
-    // calculate your solvers time step = solver_dt
-    // your dt should be minimum(preccie_dt, solver_dt)
-    // coupling
-    while (comp.GetTime() < param.Tend()) {
-        #ifdef USE_DEBUG_VISU
-        // Render and check if window is closed
-        switch (visu.Render(visugrid)) {
-        case -1:
-          return -1;
-        case 0:
-          visugrid = comp.GetVelocity();
-          break;
-        case 1:
-          visugrid = comp.GetU();
-          break;
-        case 2:
-          visugrid = comp.GetV();
-          break;
-        case 3:
-          visugrid = comp.GetP();
-          break;
-        case 4:
-          visugrid = comp.GetT();
-        default:
-          break;
-        };
-        #endif // USE_DEBUG_VISU
+    #ifdef USE_VTK
+    // Create VTK Files in the folder VTK
+    vtk.Init("VTK/field");
+    vtk.AddRank();
+    vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
+    vtk.SwitchToPointData();
+    vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
+    vtk.AddPointScalar("Pressure", comp.GetP());
+    vtk.AddPointScalar("Temperature", comp.GetT());
+    vtk.Finish();
+    #endif
 
-        #ifdef USE_VTK
-        // Create VTK Files in the folder VTK
-        vtk.Init("VTK/field");
-        vtk.AddRank();
-        vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
-        vtk.SwitchToPointData();
-        vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
-        vtk.AddPointScalar("Pressure", comp.GetP());
-        vtk.AddPointScalar("Temperature", comp.GetT());
-        vtk.Finish();
-        #endif
-        interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
-        precice_dt = interface.advance(dt); // advance coupling
-        interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
-        comp.set_coupl_temp(heatflux,N);
+    comp.TimeStep(true,&interface, temperatureID, heatfluxID,N,vertexIDs,
+    vertices,temperature,heatflux,precice_dt);
 
-        // std::cout << comp.GetTime()  <<std::endl;
-        dt = std::min(precice_dt,comp.getTimeStep(0));
-        dt = comp.TimeStep(false,dt);
-        comp.GetCoupling_T(temperature,N);
-        // for(int i=0;i<N;i++){
-        //     std::cout << heatflux[i] << " ";
-        // }
-        // std::cout << std::endl;
-    // }
-    // suppress output on other nodes than rank 0
   }
-  // std::cout << "ARE WE HERE?" << std::endl;
   interface.finalize();
   return 0;
 }

@@ -30,6 +30,7 @@ public:
     const real_t&		    Dt_value() const;
     const real_t&		    Imax   	() const;
     const real_t&		    Jmax   	() const;
+    const real_t&           Ka      () const;
 private:
     real_t	_re;
     real_t  _pr;
@@ -48,6 +49,7 @@ private:
     real_t _T_c;
     real_t _imax;
     real_t _jmax;
+    real_t _ka;
 
 };
 //------------------------------------------------------------------------------
