@@ -2,7 +2,7 @@
 build
 html
 latex
-VTK
+VTK*
 # Created by https://www.gitignore.io/api/vim,c++,scons
 
 ### C++ ###
@@ -10,6 +10,7 @@ VTK
 *.d
 *.dblite
 *.log
+*.xml
 
 # Compiled Object files
 *.slo

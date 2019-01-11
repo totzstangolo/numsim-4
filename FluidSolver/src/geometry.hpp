@@ -125,7 +125,9 @@ public:
   /// Updates the pressure field t
   void Update_T(Grid *t, real_t hot, real_t cold, bool coup) const;
   /// Updates coupling interface(s)
-  void UpdateCoupling_T(Grid *T, double *vertices, double *temperature, double *heatflux) const;
+  void UpdateCoupling_T(Grid *T, double *heatflux, int N) const;
+
+  void GetCoupling_T(Grid *T,double *temperature, int N) const;
 
 
 

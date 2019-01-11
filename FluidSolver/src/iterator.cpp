@@ -150,28 +150,6 @@ void BoundaryIterator::First () {
 		break;
 	};
 }
-//
-// void BoundaryIterator::First () {
-// 	_valid = true;
-// 	switch (_boundary) {
-// 	case 0:
-// 		_value = 0;
-// 		break;
-// 	case 1:
-// 		_value = 0;
-// 		break;
-// 	case 2:
-// 		_value = _geom->Size()[0]*(_geom->Size()[1] - 1);
-// 		break;
-// 	case 3:
-// 		_value = _geom->Size()[0] - 1;
-// 		break;
-// 	default:
-// 		_boundary = 0;
-// 		_value = 0;
-// 		break;
-// 	};
-// }
 
 //------------------------------------------------------------------------------
 void BoundaryIterator::Next () {

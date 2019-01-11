@@ -78,8 +78,23 @@ Compute::~Compute(){
 	delete _solver;
 }
 
-void Compute::set_coupl_temp(double *vertices, double *temperature, double *heatflux) const{
-	_geom->UpdateCoupling_T(_T,vertices,temperature,heatflux);
+void Compute::set_coupl_temp(double *heatflux, int N) const{
+	_geom->UpdateCoupling_T(_T,heatflux,N);
+}
+
+void Compute::GetCoupling_T(double* temperature, int N){
+	_geom->GetCoupling_T(_T,temperature,N);
+}
+
+double Compute::getTimeStep(double dt){
+	if(dt == 0){
+		dt = abs(std::min<real_t>(_geom->Mesh()[0]/_u->AbsMax(),_geom->Mesh()[1]/_v->AbsMax()));
+		dt = std::min<real_t>(dt,_dtlimit);
+		dt *= _param->Tau();
+	}
+
+	return std::min<real_t>(_max_dt, dt);
+
 }
 
 double Compute::TimeStep(bool printInfo, double dt){

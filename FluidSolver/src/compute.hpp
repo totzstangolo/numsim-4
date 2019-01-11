@@ -52,8 +52,12 @@ public:
   const Grid *GetVorticity();
   /// Computes and returns the stream line values
   const Grid *GetStream();
-  ///
-  void set_coupl_temp(double *vertices, double* temperature, double *heatflux) const;
+  /// Timestep
+  double getTimeStep(double dt);
+  /// get temperature at coupling interface
+  void GetCoupling_T(double *temperature,int N);
+  /// set temperature at coupling interface
+  void set_coupl_temp(double *heatflux, int N) const;
 
 private:
   // testing

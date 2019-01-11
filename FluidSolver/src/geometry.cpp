@@ -463,6 +463,8 @@ void Geometry::Update_U(Grid *u) const {
       case typeHot:
       case typeCold:
       case typeCoup:
+        UpdateCellDirichlet_U(u, 0.0, it);
+        break;
       case typeSlipV:
       case typeSolid:
         UpdateCellDirichlet_U(u, 0.0, it);
@@ -514,7 +516,7 @@ void Geometry::Update_U(Grid *u) const {
   }
 }
 
-void Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *temperature, double *heatflux) const{
+void Geometry::UpdateCoupling_T(Grid *T, double *heatflux, int N) const{
     BoundaryIterator it(this);
     it.SetBoundary(0,true);
     int count = 0;
@@ -522,21 +524,16 @@ void Geometry::UpdateCoupling_T(Grid *T, double *vertices, double *temperature, 
         T->Cell(it) = T->Cell(it.Top()) + Mesh()[0]*heatflux[count];
         count++;
     }
-    // int N = count;
-    // temperature = new double[count];
-    // // for(count=0;count<N;count++){
-    // //     temperature[count] = 0.0; // init
-    // // }
-    // // count = 0;
+}
+
+void Geometry::GetCoupling_T(Grid *T, double *temperature, int N) const{
+    BoundaryIterator it(this);
+    it.SetBoundary(0,true);
+    int count = 0;
     for(it.First(); it.Valid(); it.Next()){
         temperature[count] = T->Cell(it);
         count++;
     }
-    // for(count=0;count<N;count++){
-    //     std::cout << temperature[count] << " ";
-    // }
-    // std::cout << std::endl;
-    // return temperature;
 }
 
 //------------------------------------------------------------------------------
@@ -548,6 +545,8 @@ void Geometry::Update_V(Grid *v) const {
       case typeHot:
       case typeCold:
       case typeCoup:
+          UpdateCellDirichlet_V(v, 0, it);
+          break;
       case typeSlipH:
       case typeSolid:
         UpdateCellDirichlet_V(v, 0, it);

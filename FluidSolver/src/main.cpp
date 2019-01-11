@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   parser.exec(argc, argv);
   // Create the fluid solver
   Compute comp(&geom, &param);
-  std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
+  // std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
   // Create parameter and geometry instances with default values
   int N = geom.Coup(); // Number of mesh elements
   std::string config("./precice-config.xml");
@@ -77,10 +77,10 @@ int main(int argc, char **argv) {
   // int countThat=0;
   for (int i = 0; i < N; i++) {
         temperature[i] = 0.0;
-        heatflux[i]    = 0.0;
+        heatflux[i]    = 1.0;
         for (int j = 0; j < dim; j++){
             if(j==0) {
-                vertices[i * dim + j] = (i * (1 - j) + geom.Origin()[0])*geom.Mesh()[0];
+                vertices[i * dim + j] = (i * (1 - j) + geom.Origin()[0] + 0.5)*geom.Mesh()[0];
             }else{
                 if(j==1){
                     vertices[i * dim + j] = 0.25*geom.Mesh()[1];
@@ -94,7 +94,6 @@ int main(int argc, char **argv) {
         // std::cout << std::endl;
         // countThat++;
   }
-  std::cout << "HOW LARGE COUPLING WIDTH: " << geom.Coup() << std::endl;
 
   double precice_dt;
   interface.setMeshVertices(meshID, N, vertices, vertexIDs);
@@ -102,8 +101,7 @@ int main(int argc, char **argv) {
   std::cout << "Initialize preCICE..." << std::endl;
   double dt = 0.00;
   interface.initialize();
-  //std::cout << "Up to here" << std::endl;
-  ///////////////////////////
+
   if (interface.isActionRequired(actionWriteInitialData())) {
       interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write initial Temperature
       interface.fulfilledAction(actionWriteInitialData());
@@ -150,7 +148,7 @@ VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
   // Run the time steps until the end is reached
 
         // start the simulation loop
-while (interface.isCouplingOngoing()) { // time loop
+// while (interface.isCouplingOngoing()) { // time loop
     // calculate your solvers time step = solver_dt
     // your dt should be minimum(preccie_dt, solver_dt)
     // coupling
@@ -190,25 +188,23 @@ while (interface.isCouplingOngoing()) { // time loop
         vtk.AddPointScalar("Temperature", comp.GetT());
         vtk.Finish();
         #endif
-
-        // Run a few steps
-        // for (uint32_t i = 0; i < 9; ++i) {
-        dt = std::min(precice_dt,dt);
         interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
         precice_dt = interface.advance(dt); // advance coupling
         interface.readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
-        comp.set_coupl_temp(vertices,temperature,heatflux);
-        // update fluid domains heat flux boundary condition!
-        //output data for visualization and update iteration values
-        std::cout << geom.Origin()[0] << ", " << geom.Origin()[1] <<std::endl;
-        std::cout << comp.GetTime()  <<std::endl;
+        comp.set_coupl_temp(heatflux,N);
+
+        // std::cout << comp.GetTime()  <<std::endl;
+        dt = std::min(precice_dt,comp.getTimeStep(0));
         dt = comp.TimeStep(false,dt);
-        // exit(1);
-        // bool printOnlyOnMaster = !comm.getRank();
-        // comp.TimeStep(printOnlyOnMaster,dt);
-    }
-    interface.finalize();
+        comp.GetCoupling_T(temperature,N);
+        // for(int i=0;i<N;i++){
+        //     std::cout << heatflux[i] << " ";
+        // }
+        // std::cout << std::endl;
+    // }
     // suppress output on other nodes than rank 0
   }
+  // std::cout << "ARE WE HERE?" << std::endl;
+  interface.finalize();
   return 0;
 }

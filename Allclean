@@ -14,7 +14,7 @@ rm -f ${Participant1}_checkMesh.log
 rm -f ${Participant1}_decomposePar.log
 rm -f ${Participant1}.log
 rm -f ${Participant1}_reconstructPar.log
-
+rm -fr ./VTK
 # Participant 2: Solid
 Participant2="Solid"
 cd ${Participant2}
@@ -37,7 +37,7 @@ echo "Deleting the preCICE log files..."
 rm -f \
     precice-*.log \
     precice-postProcessingInfo.log
-    
+
 # Output files for preCICE versions before 1.2:
 rm -f \
     iterations-${Participant1}.txt iterations-${Participant2}.txt \
