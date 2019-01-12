@@ -31,6 +31,7 @@ public:
     const real_t&		    Imax   	() const;
     const real_t&		    Jmax   	() const;
     const real_t&           Ka      () const;
+    const bool&             Expl    () const;
 private:
     real_t	_re;
     real_t  _pr;
@@ -50,6 +51,7 @@ private:
     real_t _imax;
     real_t _jmax;
     real_t _ka;
+    bool _expl;
 
 };
 //------------------------------------------------------------------------------

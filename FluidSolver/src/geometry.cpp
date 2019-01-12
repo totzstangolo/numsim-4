@@ -293,6 +293,10 @@ void Geometry::Load(const char *file) {
                 }
                 _origin[1] = y;
                 _coup = x-_origin[0]+1;
+                if(x<1){
+                    _origin[0] = 1;
+                    _origin[1] = 0;
+                }
               break;
             case '-':
               _cell[x + y * _size[0]].type = typeSlipH;
@@ -516,23 +520,58 @@ void Geometry::Update_U(Grid *u) const {
   }
 }
 
-void Geometry::UpdateCoupling_T(Grid *T, double *heatflux, int N) const{
-    BoundaryIterator it(this);
-    it.SetBoundary(0,true);
-    int count = 0;
-    for(it.First(); it.Valid(); it.Next()){
-        T->Cell(it) = T->Cell(it.Top()) + Mesh()[0]*heatflux[count];
-        count++;
+void Geometry::UpdateCoupling_T(Grid *T, double *heatflux, int N, bool expl) const{
+    if(expl){
+        BoundaryIterator it(this);
+        it.SetBoundary(0,true);
+        int count = 0;
+        for(it.First(); it.Valid(); it.Next()){
+            T->Cell(it) = T->Cell(it.Top()) + Mesh()[1]*heatflux[count];
+            count++;
+        }
+    }else{
+        BoundaryIterator it(this);
+        it.SetBoundary(0,true);
+        int count = 0;
+        for(it.First(); it.Valid(); it.Next()){
+            T->Cell(it) = T->Cell(it.Top()) + Mesh()[1]*heatflux[count];
+            count++;
+        }
+        it.SetBoundary(1,true);
+        for(it.First(); it.Valid(); it.Next()){
+            T->Cell(it) = T->Cell(it.Right()) + Mesh()[0]*heatflux[count];
+            count++;
+        }
+        it.SetBoundary(2,true);
+        for(it.First(); it.Valid(); it.Next()){
+            T->Cell(it) = T->Cell(it.Down()) + Mesh()[1]*heatflux[count];
+            count++;
+        }
+        it.SetBoundary(3,true);
+        for(it.First(); it.Valid(); it.Next()){
+            T->Cell(it) = T->Cell(it.Left()) + Mesh()[0]*heatflux[count];
+            count++;
+        }
     }
 }
 
-void Geometry::GetCoupling_T(Grid *T, double *temperature, int N) const{
+void Geometry::GetCoupling_T(Grid *T, double *temperature, int N, bool expl) const{
     BoundaryIterator it(this);
-    it.SetBoundary(0,true);
     int count = 0;
-    for(it.First(); it.Valid(); it.Next()){
-        temperature[count] = T->Cell(it);
-        count++;
+    if(expl){
+        it.SetBoundary(0,true);
+        for(it.First(); it.Valid(); it.Next()){
+            temperature[count] = T->Cell(it);
+            count++;
+        }
+    }else{
+        for(int k=0;k<4;k++){
+            it.SetBoundary(k,true);
+            for(it.First(); it.Valid(); it.Next()){
+                temperature[count] = T->Cell(it);
+                count++;
+            }
+        }
     }
 }
 
@@ -740,6 +779,6 @@ void Geometry::Update_T(Grid *t, real_t hot, real_t cold, bool coup) const {
 }
 
 const multi_real_t &Geometry::Origin() const{ return _origin;}
-const real_t &Geometry::Coup() const{ return _coup;}
+const index_t &Geometry::Coup() const{ return _coup;}
 
 //------------------------------------------------------------------------------

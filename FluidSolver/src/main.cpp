@@ -57,6 +57,11 @@ int main(int argc, char **argv) {
   Compute comp(&geom, &param);
   // Create parameter and geometry instances with default values
   int N = geom.Coup(); // Number of mesh elements
+  // const std::string& coric = actionReadIterationCheckpoint();
+  // const std::string& cowic = actionWriteIterationCheckpoint();;
+  if(!param.Expl()){
+      N *= 4;
+  }
   std::string config("./precice-config.xml");
   std::string solverName("Fluid");
   SolverInterface interface(solverName,0,1);
@@ -70,29 +75,13 @@ int main(int argc, char **argv) {
   int heatfluxID = interface.getDataID("Heat-Flux", meshID);
   int *vertexIDs = new int[N];
   double *vertices = new double[dim * N];
+  for(int i=0;i<N;i++){
+      vertices[i]=-1;
+  }
   double *temperature, *heatflux;
   temperature = new double[N];
   heatflux = new double[N];
-  // int countThat=0;
-  for (int i = 0; i < N; i++) {
-        temperature[i] = 0.0;
-        heatflux[i]    = 1.0;
-        for (int j = 0; j < dim; j++){
-            if(j==0) {
-                vertices[i * dim + j] = (i * (1 - j) + geom.Origin()[0] + 0.5)*geom.Mesh()[0];
-            }else{
-                if(j==1){
-                    vertices[i * dim + j] = 0.25*geom.Mesh()[1];
-                }else{
-                    vertices[i * dim + j] = 0;
-                }
-
-            }
-            // std::cout << vertices[i * dim + j] << " ";
-        }
-        // std::cout << std::endl;
-        // countThat++;
-  }
+  comp.Vertices(vertices,temperature,heatflux,N,dim);
 
   interface.setMeshVertices(meshID, N, vertices, vertexIDs);
 
@@ -140,7 +129,7 @@ VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
   visugrid = comp.GetVelocity();
 #endif // USE_DEBUG_VISU
 
-while (comp.GetTime() < param.Tend()) {
+while (interface.isCouplingOngoing()) {
     #ifdef USE_DEBUG_VISU
     // Render and check if window is closed
     switch (visu.Render(visugrid)) {
@@ -176,9 +165,10 @@ while (comp.GetTime() < param.Tend()) {
     vtk.AddPointScalar("Temperature", comp.GetT());
     vtk.Finish();
     #endif
-
-    comp.TimeStep(true,&interface, temperatureID, heatfluxID,N,vertexIDs,
+    for(int iCount=0; iCount <1; iCount++){
+        comp.TimeStep(true,&interface, temperatureID, heatfluxID,N,vertexIDs,
     vertices,temperature,heatflux,precice_dt);
+    }
 
   }
   interface.finalize();

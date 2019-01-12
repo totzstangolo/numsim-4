@@ -60,6 +60,8 @@ public:
   void GetCoupling_T(double *temperature,int N);
   /// set temperature at coupling interface
   void set_coupl_temp(double *heatflux, int N) const;
+  /// fill vertices information
+  void Vertices(double *vertices, double *temperature, double *heatflux, int N, int dim);
 
 private:
   // testing

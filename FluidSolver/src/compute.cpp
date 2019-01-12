@@ -82,11 +82,11 @@ Compute::~Compute(){
 }
 
 void Compute::set_coupl_temp(double *heatflux, int N) const{
-	_geom->UpdateCoupling_T(_T,heatflux,N);
+	_geom->UpdateCoupling_T(_T,heatflux,N,_param->Expl());
 }
 
 void Compute::GetCoupling_T(double* temperature, int N){
-	_geom->GetCoupling_T(_T,temperature,N);
+	_geom->GetCoupling_T(_T,temperature,N,_param->Expl());
 }
 
 double Compute::getTimeStep(double dt){
@@ -98,6 +98,76 @@ double Compute::getTimeStep(double dt){
 
 	return std::min<real_t>(_max_dt, dt);
 
+}
+
+void Compute::Vertices(double *vertices, double *temperature, double *heatflux, int N, int dim){
+	if(_param->Expl()){
+		for (int i = 0; i < N; i++) {
+	          temperature[i] = 0.0;
+	          heatflux[i]    = 1.0;
+	          for (int j = 0; j < dim; j++){
+	              if(j==0) {
+	                  vertices[i * dim + j] = (i * (1 - j) + _geom->Origin()[0] + 0.5)*_geom->Mesh()[0];
+	              }else{
+	                  if(j==1){
+	                      vertices[i * dim + j] = 0.25*_geom->Mesh()[1];
+	                  }else{
+	                      vertices[i * dim + j] = 0;
+	                  }
+	              }
+	          }
+	    }
+	}else{
+		for(int i=0;i<N;i++){
+			temperature[i] = 303.0;
+			heatflux[i]    = 0.0;
+		}
+		double *temp=new double[N*dim];
+		int count = 0;
+		BoundaryIterator it(_geom);
+		for(int k = 1; k<=4; k++){
+			it.SetBoundary(k-1,true);
+			it.First();
+			for (int i = 0; i < _geom->Coup() && it.Valid(); i++) {
+		          for (int j = 0; j < dim; j++){
+		              if(j==0) {
+						if(k-1==0 || k-1==2) {
+							// x-coordinate of upper or lower bound
+							vertices[k*(i*dim+j)] = (it.Pos()[0]+0.5)*_geom->Mesh()[0];
+						}else{
+							// x-coordinate of sides
+						  	vertices[k*(i*dim+j)] = it.Pos()[0]*_geom->Mesh()[0];
+					    }
+		              }else{
+		                  if(j==1){
+							  if(k-1==1 || k-1==3) {
+								// y-coordinate of sides
+	  							vertices[k*(i*dim+j)] = (it.Pos()[1]+0.5)*_geom->Mesh()[1];
+	  						}else{
+								if(k-1==0){
+									// y-coordinate of lower bound
+									vertices[k*(i*dim+j)] = _geom->Mesh()[1];
+								}else{
+									// y-coordinate of upper bound
+									vertices[k*(i*dim+j)] = it.Pos()[1]*_geom->Mesh()[1];
+								}
+	  					    }
+		                  }else{
+		                      vertices[k*(i*dim+j)] = 0;
+		                  }
+		              }
+					  temp[count] = vertices[k*(i*dim+j)];
+					  count++;
+		          }
+				  it.Next();
+		          // countThat++;
+		    }
+		}
+		for(int i=0;i<3*N;i++){
+			vertices[i] = temp[i];
+			if((i+1)%3!=0) vertices[i]+=0.15;
+		}
+	}
 }
 
 double Compute::TimeStep(bool printInfo, SolverInterface *interface,int temperatureID, int heatfluxID, int N, int *vertexIDs,
@@ -162,7 +232,6 @@ double *vertices,double *temperature,double *heatflux,double &precice_dt){
 	_t += dt;
 
 	if(printInfo)
-		// printf("time: %f \n itercount: %d \n max_dt: %f \n", _t, _iter_count, _max_dt);
 		printf("time: %f\n", _t);
 
 	GetCoupling_T(temperature,N);
@@ -284,10 +353,7 @@ void Compute::TempEqu(const real_t &dt){
 		vty = _T->DC_dvT_y(intIterator,_param->Alpha(),_v);
 		_T->Cell(intIterator) = _T->Cell(intIterator) +
 				(pref*(txx+tyy)-utx-vty)*dt;
-		// std::cout << "Temperature in cell " << intIterator.Value() << ": "
-		// 	<< _T->Cell(intIterator) << std::endl;
 	}
-	// exit(0);
 }
 
 /// Compute the RHS of the poisson equation

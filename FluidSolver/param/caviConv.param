@@ -15,4 +15,5 @@ pr = 7.0
 gx = 0.0
 gy = -9.81
 beta = 0.00021
-kappa = 0.00010
+kappa = 1
+explicit = 0

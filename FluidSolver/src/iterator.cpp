@@ -125,21 +125,21 @@ void BoundaryIterator::First () {
 		break;
 	case 1:
 		if(_coup){
-			_value = _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0];
+			_value = _geom->Origin()[0]-1+(_geom->Origin()[1]+1)*_geom->Size()[0];
 		}else{
 			_value = 0;
 		}
 		break;
 	case 2:
 		if(_coup){
-			_value = _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0];
+			_value = _geom->Origin()[0]+(_geom->Origin()[1]+1)*_geom->Size()[0]+_geom->Coup()*_geom->Size()[0];
 		}else{
 			_value = _geom->Size()[0]*(_geom->Size()[1] - 1);
 		}
 		break;
 	case 3:
 		if(_coup){
-			_value = _geom->Origin()[0]+_geom->Coup();
+			_value = _geom->Origin()[0]+(_geom->Origin()[1]+1)*_geom->Size()[0]+_geom->Coup();
 		}else{
 			_value = _geom->Size()[0] - 1;
 		}
@@ -158,7 +158,7 @@ void BoundaryIterator::Next () {
 	case 0:
 		++_value;
 		if(_coup){
-			if (_value >= _geom->Origin()[0]+_geom->Coup()) _valid = false;
+			if (_value >= _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0]+_geom->Coup()) _valid = false;
 		}else{
 			if (_value >= _geom->Size()[0]) _valid = false;
 		}
@@ -166,7 +166,7 @@ void BoundaryIterator::Next () {
 	case 1:
 		_value += _geom->Size()[0];
 		if(_coup){
-			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0]) _valid = false;
+			if (_value > _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0]+_geom->Coup()*_geom->Size()[0]) _valid = false;
 		}else{
 			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
 		}
@@ -174,7 +174,7 @@ void BoundaryIterator::Next () {
 	case 2:
 		++_value;
 		if(_coup){
-			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0] + _geom->Coup()) _valid = false;
+			if (_value > _geom->Origin()[0]+(_geom->Origin()[1]+1)*_geom->Size()[0]+_geom->Coup()*_geom->Size()[0]+_geom->Coup()) _valid = false;
 		}else{
 			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
 		}
@@ -182,7 +182,7 @@ void BoundaryIterator::Next () {
 	case 3:
 		_value += _geom->Size()[0];
 		if(_coup){
-			if (_value >= _geom->Origin()[0]+_geom->Coup()*_geom->Size()[0] + _geom->Coup()) _valid = false;
+			if (_value > _geom->Origin()[0]+_geom->Origin()[1]*_geom->Size()[0] + _geom->Coup()*_geom->Size()[0]+ _geom->Coup()) _valid = false;
 		}else{
 			if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
 		}

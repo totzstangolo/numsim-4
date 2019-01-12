@@ -109,7 +109,7 @@ public:
   /// Get origin
   const multi_real_t &Origin() const;
   /// Get coupling width (assume edge lengths of same size)
-  const real_t &Coup() const;
+  const index_t &Coup() const;
 
 
   /// Returns the celltype of cell
@@ -125,9 +125,9 @@ public:
   /// Updates the pressure field t
   void Update_T(Grid *t, real_t hot, real_t cold, bool coup) const;
   /// Updates coupling interface(s)
-  void UpdateCoupling_T(Grid *T, double *heatflux, int N) const;
+  void UpdateCoupling_T(Grid *T, double *heatflux, int N, bool expl) const;
 
-  void GetCoupling_T(Grid *T,double *temperature, int N) const;
+  void GetCoupling_T(Grid *T,double *temperature, int N, bool expl) const;
 
 
 
@@ -143,7 +143,7 @@ private:
   index_t _boffset;
   multi_real_t _h;
   multi_real_t _origin;
-  real_t _coup;
+  index_t _coup;
 
   multi_real_t _velocity;
   real_t _pressure;
