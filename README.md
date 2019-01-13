@@ -1,4 +1,13 @@
 ### After git cloning execute in working directory:
+
+(First, on the IPVS cluster execute
+
+    source /usr/local.nfs/sgs/software/NumSim/bashrc.sh
+
+This is not necessary if your preCICE adapter is already executable globally.)
+
+Then, execute
+
     scons -c && scons --config=force
 
 Stay in working directory.
