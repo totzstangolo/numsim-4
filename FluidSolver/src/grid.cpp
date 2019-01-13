@@ -94,6 +94,14 @@ real_t Grid::Interpolate (const multi_real_t& pos) const {
     return res;
 }
 
+void Grid::Copy(Grid* source){
+	this->_geom = source->_geom;
+	int size = (_geom->Size()[0]+2)*(_geom->Size()[1]+2);
+	for(int iCount = 0; iCount < size; iCount++){
+		this->_data[iCount] = source->_data[iCount];
+	}
+	this->_offset = source->_offset;
+}
 
 /// Computes the left-sided difference quotient in x-dim at [it]
 real_t Grid::dx_l(const Iterator &it) const{

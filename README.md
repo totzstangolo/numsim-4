@@ -1,13 +1,38 @@
-### In working directory:
+### After git cloning execute in working directory:
     scons -c && scons --config=force
 
-Stay in working directory. Here, execute:
+Stay in working directory.
 
-    ./Allrun
+#### a) Forced convection over a heated plate:
+Execute
 
-To clean all produced files:
+    blockMesh -case Solid_plate/
 
+Open another terminal (now there are two terminals open in parallel in working directory). Then execute in terminal 1
+
+    ./FluidSolver/build/NumSim -geom FluidSolver/geom/plate.geom -param FluidSolver/param/plate.param
+
+and in terminal 2
+
+    laplacianFoam -case Solid_plate/
+
+#### b) Natural convection in cavity with heat-conducting walls:
+
+Execute
+
+    blockMesh -case Solid_convection/
+
+Open another terminal (now there are two terminals open in parallel in working directory). Then execute in terminal 1
+
+    ./FluidSolver/build/NumSim -geom FluidSolver/geom/caviConv.geom -param FluidSolver/param/caviConv.param
+
+and in terminal 2
+
+    laplacianFoam -case Solid_convection/
+
+
+
+
+
+#### To clean all produced files:
     ./Allclean
-
-### To do:
-1) Define a function which sets the observables on the fluid boundary.

@@ -31,8 +31,11 @@ public:
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  double TimeStep(bool printInfo, precice::SolverInterface *interface,int temperatureID, int heatfluxID, int N, int *vertexIDs,
-  double *vertices,double *temperature,double *heatflux,double &precice_dt);
+  double TimeStep(bool printInfo, precice::SolverInterface *interface,
+                  int temperatureID, int heatfluxID, int N, int *vertexIDs,
+                  double *vertices,double *temperature,double *heatflux,
+                  double &precice_dt,const std::string& coric,
+                  const std::string& cowic);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;
@@ -93,12 +96,24 @@ private:
   Grid *_rhs;
 
   // container for interpolating whichever values
-  Grid *_tmp;
-
+  Grid* _tmp;
   Solver *_solver;
 
   const Geometry *_geom;
   const Parameter *_param;
+
+  ///Checkpoint data structures
+  real_t _tmp_dt;
+  real_t _tmp_precice_dt;
+  double* _tmp_temperature;
+  double* _tmp_heatflux;
+  Grid* _tmp_p;
+  Grid* _tmp_u;
+  Grid* _tmp_v;
+  Grid* _tmp_T;
+  Grid* _tmp_G;
+  Grid* _tmp_F;
+  Grid* _tmp_rhs;
 
   /// Compute the new velocites u,v
   void NewVelocities(const real_t &dt);

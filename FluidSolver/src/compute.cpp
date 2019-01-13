@@ -66,6 +66,19 @@ Compute::Compute(const Geometry *geom, const Parameter *param){
 	//create solver (used script omega, not param omega)
 	_solver = new SOR(_geom, _param->Omega());
 
+	///Checkpoint data structures
+	_tmp_dt = -1;
+	_tmp_precice_dt = -1;
+
+	_tmp_p = new Grid(_geom, compute_offset_p);
+	_tmp_rhs = new Grid(_geom, compute_offset_p);
+	_tmp_T = new Grid(_geom, compute_offset_p);
+	_tmp_u = new Grid(_geom, compute_offset_x);
+	_tmp_F = new Grid(_geom, compute_offset_x);
+	_tmp_v = new Grid(_geom, compute_offset_y);
+	_tmp_G = new Grid(_geom, compute_offset_y);
+
+
 
 }
 
@@ -77,8 +90,8 @@ Compute::~Compute(){
 	delete _p;
 	delete _T;
 	delete _rhs;
-	delete _tmp;
 	delete _solver;
+	delete _tmp;
 }
 
 void Compute::set_coupl_temp(double *heatflux, int N) const{
@@ -95,9 +108,7 @@ double Compute::getTimeStep(double dt){
 		dt = std::min<real_t>(dt,_dtlimit);
 		dt *= _param->Tau();
 	}
-
 	return std::min<real_t>(_max_dt, dt);
-
 }
 
 void Compute::Vertices(double *vertices, double *temperature, double *heatflux, int N, int dim){
@@ -170,8 +181,25 @@ void Compute::Vertices(double *vertices, double *temperature, double *heatflux, 
 	}
 }
 
-double Compute::TimeStep(bool printInfo, SolverInterface *interface,int temperatureID, int heatfluxID, int N, int *vertexIDs,
-double *vertices,double *temperature,double *heatflux,double &precice_dt){
+double Compute::TimeStep(bool printInfo, SolverInterface *interface,
+						 int temperatureID, int heatfluxID, int N,
+						 int *vertexIDs, double *vertices,double *temperature,
+						 double *heatflux,double &precice_dt,
+						 const std::string& coric,const std::string& cowic){
+
+
+	if(_param->Expl() && (*interface).isActionRequired(cowic)){
+ 		//// save checkpoint
+		_tmp_precice_dt = precice_dt;
+		_tmp_p->Copy(_p);
+		_tmp_rhs->Copy(_rhs);
+		_tmp_T->Copy(_T);
+		_tmp_u->Copy(_u);
+		_tmp_F->Copy(_F);
+		_tmp_v->Copy(_v);
+		_tmp_G->Copy(_G);
+ 		(*interface).fulfilledAction(cowic);
+	}
 	(*interface).readBlockScalarData(heatfluxID,N,vertexIDs,heatflux); // read new heatflux from preCICE buffers
 	set_coupl_temp(heatflux,N);
 	// Compute like in script page 23
@@ -229,7 +257,7 @@ double *vertices,double *temperature,double *heatflux,double &precice_dt){
 	_geom->Update_U(_u);
 	_geom->Update_V(_v);
 
-	_t += dt;
+
 
 	if(printInfo)
 		printf("time: %f\n", _t);
@@ -237,7 +265,21 @@ double *vertices,double *temperature,double *heatflux,double &precice_dt){
 	GetCoupling_T(temperature,N);
 	(*interface).writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write new temperature to preCICE buffers
     precice_dt = (*interface).advance(dt); // advance coupling
-	return dt;
+	if(_param->Expl() && (*interface).isActionRequired(coric)){ // timestep not converged
+		// set variables back to checkpoint
+		dt = _tmp_dt;
+		precice_dt = _tmp_precice_dt;
+		_p->Copy(_tmp_p);
+		_rhs->Copy(_tmp_rhs);
+		_T->Copy(_tmp_T);
+		_u->Copy(_tmp_u);
+		_F->Copy(_tmp_F);
+		_v->Copy(_tmp_v);
+		_G->Copy(_tmp_G);
+		(*interface).fulfilledAction(coric);
+	}else{
+		_t += dt;
+	}
 }
 
   /// Returns the simulated time in total

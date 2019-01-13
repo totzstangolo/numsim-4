@@ -82,6 +82,7 @@ public:
   /// Returns a pointer to the raw data
   real_t *Data();
 
+  void Copy(Grid* source);
   /** Get the offset value of the grid
    */
   const multi_real_t &getOffset() const;

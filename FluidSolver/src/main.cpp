@@ -57,8 +57,6 @@ int main(int argc, char **argv) {
   Compute comp(&geom, &param);
   // Create parameter and geometry instances with default values
   int N = geom.Coup(); // Number of mesh elements
-  // const std::string& coric = actionReadIterationCheckpoint();
-  // const std::string& cowic = actionWriteIterationCheckpoint();;
   if(!param.Expl()){
       N *= 4;
   }
@@ -87,7 +85,8 @@ int main(int argc, char **argv) {
 
   std::cout << "Initialize preCICE..." << std::endl;
   double precice_dt = interface.initialize();
-
+  const std::string& coric = actionReadIterationCheckpoint();
+  const std::string& cowic = actionWriteIterationCheckpoint();
   if (interface.isActionRequired(actionWriteInitialData())) {
       interface.writeBlockScalarData(temperatureID,N,vertexIDs,temperature); // write initial Temperature
       interface.fulfilledAction(actionWriteInitialData());
@@ -167,7 +166,7 @@ while (interface.isCouplingOngoing()) {
     #endif
     for(int iCount=0; iCount <1; iCount++){
         comp.TimeStep(true,&interface, temperatureID, heatfluxID,N,vertexIDs,
-    vertices,temperature,heatflux,precice_dt);
+    vertices,temperature,heatflux,precice_dt,coric,cowic);
     }
 
   }
